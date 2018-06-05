@@ -703,9 +703,8 @@ void ElfFile<ElfFileParamNames>::rewriteSectionsLibrary()
             std::string & nm = sectionsByOldIndex[i];
             Elf_Shdr & shdr = findSection(nm);
             if (rdi(shdr.sh_type) == SHT_STRTAB)
-                if (nm != ".shstrtab" && nm != ".dynstr")
-                    if (not haveReplacedSection(nm))
-                        replaceSection(nm, rdi(shdr.sh_size));
+                if (nm != ".dynstr" && not haveReplacedSection(nm))
+                    replaceSection(nm, rdi(shdr.sh_size));
         }
     }
 
