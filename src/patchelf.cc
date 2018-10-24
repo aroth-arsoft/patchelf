@@ -705,6 +705,22 @@ void ElfFile<ElfFileParamNames>::writeReplacedSections(Elf_Off & curOff,
 template<ElfFileParams>
 void ElfFile<ElfFileParamNames>::rewriteSectionsLibrary()
 {
+    /* Move any entry of type STRTAB other than (".shstrtab", ".dynstr")
+    at the end if ".dynstr" has been moved.
+    This ensures that the first STRTAB entry after .shstrtab is .dynstr,
+    and is required for readelflib.c in glibc */
+    if (haveReplacedSection(std::string(".dynstr")))
+    {
+        for (unsigned int i = 1; i < sectionsByOldIndex.size(); ++i)
+        {   
+            std::string & nm = sectionsByOldIndex[i];
+            Elf_Shdr & shdr = findSection(nm);
+            if (rdi(shdr.sh_type) == SHT_STRTAB)
+                if (nm != ".dynstr" && not haveReplacedSection(nm))
+                    replaceSection(nm, rdi(shdr.sh_size));
+        }
+    }
+
     /* For dynamic libraries, we just place the replacement sections
        at the end of the file.  They're mapped into memory by a
        PT_LOAD segment located directly after the last virtual address
